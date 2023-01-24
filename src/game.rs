@@ -8,7 +8,8 @@ pub fn start_game() {
     let reply = Reply::new("adds",vec![0, 1, 2,0]);
 
     Words::start(&mut words, reply);
-    //print!("{:?}\n",pos);
+
+    //print!("{:?}\n",words.words);
     //print!("{}",pos.len());
 
 }
@@ -55,10 +56,11 @@ impl Words {
     }
 
     fn start(&mut self, first_reply: Reply){
-        self.find_best(first_reply);
+        let word=self.find_best(first_reply);
+        print!("best word : {}",word.0);
     }
 
-    fn find_best(&self, reply : Reply) {
+    fn find_best(&self, reply : Reply) -> (&String,i32){
         let mut max_esperance=0;
         let mut best_word:&String=&self.words[0];
         for _word in self.words.iter() {
@@ -67,28 +69,51 @@ impl Words {
                 max_esperance=esperance;
                 best_word=_word;
             }
-            print!("E({})={}\n",_word,esperance);
+            //print!("E({})={}\n\n",_word,esperance);
         }
+        (best_word,max_esperance)
     }
 
     fn compute_esperance(&self, word : &String) -> i32{
         let wordChar = word.chars().collect();
         let mut esperance=0;
+        let len_words=self.words.len();
         for _possiblities in self.possiblities.iter() {
-            esperance+=1;
-            self.elimine(&wordChar,_possiblities.to_vec());
+            let mots_restant=self.elimine(&wordChar,_possiblities.to_vec());
+            esperance+= mots_restant*(len_words-mots_restant);
 
-            //print!("{:?},{}\n",_possiblities,esperance);
+
+            //print!("    {:?},{}\n",_possiblities,esperance);
 
         }
-        esperance
+        esperance=esperance / len_words;
+        esperance as i32
     }
 
     fn elimine(&self,suggestion :&Vec<char>, reply: Vec<i8>) -> usize{
         let mut words_reply=self.words.clone();
 
 
+        for(char_i,rep_i) in suggestion.iter().zip(reply.iter()){
 
+            //println!("      item1: {} item2: {}", char_i,rep_i);
+        }
+
+        let letresPresente = suggestion.into_iter()
+            .zip(reply.into_iter())
+            .filter(|(_, rep_i)| *rep_i == 1 || *rep_i == 2)
+            .map(|(char_i, _)| char_i)
+            .collect::<Vec<_>>();
+
+
+        //println!("      {:?}",letresPresente);
+        words_reply=words_reply.into_iter()
+            .filter(|word| {
+                letresPresente.iter().all(|letter| word.contains(letter.to_string().as_str()))
+            })
+            .collect();
+
+        //println!("      {:?}",words_reply);
 
         words_reply.len()
     }
