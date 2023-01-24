@@ -3,17 +3,31 @@ use std::io::{BufRead, BufReader};
 
 static FILE_PATH_EN : &str = "data/words.txt";
 
-struct Words {
-    size: usize,
-    language: String,
-    words: Vec<String>,
+pub fn start_game() {
+    let mut words =Words::new(4, "en");
+    let reply = Reply::new("adds",vec![0, 1, 2,0]);
+
+    Words::start(&mut words, reply);
+    //print!("{:?}\n",pos);
+    //print!("{}",pos.len());
 
 }
 
+struct Words {
+    size: usize,
+    possiblities: Vec<Vec<i8>>,
+    language: String,
+    words: Vec<String>,
+    remaining_words :Vec<String>
+}
+
 impl Words {
-    fn new(size: usize, language: String) -> Words {
-        let words = Self::import_words(&language, size);
-        Words { size , language , words }
+    fn new(size: usize, language: &str) -> Words {
+        let words = Self::import_words(&language.to_string(), size);
+        let remaining_words=words.clone();
+        let possiblities = generate_possibilities(size);
+        let language=language.to_string();
+        Words { size , possiblities, language , words,remaining_words }
     }
 
     fn import_words(language: &String, size: usize) -> Vec<String> {
@@ -39,15 +53,49 @@ impl Words {
     fn count(&self) -> usize {
         self.words.len()
     }
-    fn start(&self, first_reply: Reply){
+
+    fn start(&mut self, first_reply: Reply){
         self.find_best(first_reply);
     }
 
-    fn find_best(&self, reply : Reply)-> String {
-return "".to_string();
+    fn find_best(&self, reply : Reply) {
+        let mut max_esperance=0;
+        let mut best_word:&String=&self.words[0];
+        for _word in self.words.iter() {
+            let esperance=Self::compute_esperance(self,_word);
+            if esperance>max_esperance{
+                max_esperance=esperance;
+                best_word=_word;
+            }
+            print!("E({})={}\n",_word,esperance);
+        }
     }
 
+    fn compute_esperance(&self, word : &String) -> i32{
+        let wordChar = word.chars().collect();
+        let mut esperance=0;
+        for _possiblities in self.possiblities.iter() {
+            esperance+=1;
+            self.elimine(&wordChar,_possiblities.to_vec());
+
+            //print!("{:?},{}\n",_possiblities,esperance);
+
+        }
+        esperance
+    }
+
+    fn elimine(&self,suggestion :&Vec<char>, reply: Vec<i8>) -> usize{
+        let mut words_reply=self.words.clone();
+
+
+
+
+        words_reply.len()
+    }
+
+
 }
+
 #[derive(Debug)]
 enum ReplyType {
     Correct,
@@ -56,11 +104,11 @@ enum ReplyType {
 }
 struct Reply {
     suggestion: Vec<char>,
-    reply : Vec<ReplyType>
+    reply : Vec<i8>
 }
 
 impl Reply {
-    fn new(suggestion :String, reply : Vec<ReplyType>) -> Reply {
+    fn new(suggestion :&str, reply : Vec<i8>) -> Reply {
         let size=reply.len();
         if suggestion.len() != size {panic!("Error wrong len")}
         Reply { suggestion: suggestion.chars().collect(), reply }
@@ -68,29 +116,36 @@ impl Reply {
 
 }
 
-pub fn start_game() {
-    //let words=Words::new(12, "en".to_string());
-    let pos=generate_combinations(3);
-    print!("{:?}",pos)
-}
 
 
-fn generate_combinations(n: u32) -> Vec<Vec<ReplyType>> {
-    let mut result: Vec<Vec<ReplyType>> = vec![];
-    for i in 0..2u32.pow(n) {
-        let mut combination: Vec<ReplyType> = vec![];
-        for j in 0..n {
-            let bit = (i >> j) & 1;
-            print!("{}, {}, {}|",i,j,bit);
-            match bit {
-                0 => combination.push(ReplyType::Correct),
-                1 => combination.push(ReplyType::WrongSpot),
-                2 => combination.push(ReplyType::NotInTheWorld),
-                _ => panic!("Invalid bit"),
-            }
+//     Correct       -> 2
+//     WrongSpot     -> 1
+//     NotInTheWorld -> 0
+
+fn generate_possibilities(n: usize) -> Vec<Vec<i8>> {
+    let possibilities = vec![0, 1, 2];
+    if n == 0 {
+        return vec![vec![]];
+    }
+    let mut result = Vec::new();
+    for combination in generate_possibilities(n - 1).iter() {
+        for possibility in possibilities.iter() {
+            let mut new_combination = combination.clone();
+            new_combination.push(*possibility as i8);
+            result.push(new_combination);
         }
-        result.push(combination);
     }
     result
 }
+
+
+
+
+
+
+
+
+
+
+
 
