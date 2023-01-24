@@ -44,10 +44,11 @@ impl Words {
     }
 
     fn find_best(&self, reply : Reply)-> String {
-
+return "".to_string();
     }
 
 }
+#[derive(Debug)]
 enum ReplyType {
     Correct,
     WrongSpot,
@@ -64,14 +65,32 @@ impl Reply {
         if suggestion.len() != size {panic!("Error wrong len")}
         Reply { suggestion: suggestion.chars().collect(), reply }
     }
+
 }
 
 pub fn start_game() {
-    let words=Words::new(12, "en".to_string());
-    print!("{:?}",words.count())
+    //let words=Words::new(12, "en".to_string());
+    let pos=generate_combinations(3);
+    print!("{:?}",pos)
 }
 
-impl ReplyType{
-    
+
+fn generate_combinations(n: u32) -> Vec<Vec<ReplyType>> {
+    let mut result: Vec<Vec<ReplyType>> = vec![];
+    for i in 0..2u32.pow(n) {
+        let mut combination: Vec<ReplyType> = vec![];
+        for j in 0..n {
+            let bit = (i >> j) & 1;
+            print!("{}, {}, {}|",i,j,bit);
+            match bit {
+                0 => combination.push(ReplyType::Correct),
+                1 => combination.push(ReplyType::WrongSpot),
+                2 => combination.push(ReplyType::NotInTheWorld),
+                _ => panic!("Invalid bit"),
+            }
+        }
+        result.push(combination);
+    }
+    result
 }
 
