@@ -1,7 +1,7 @@
 mod game;
 
 fn main() {
-    game::start_game();
+    game::menu();
 
     //println!("{:?}",generate_possibilities(3));
 }
