@@ -2,9 +2,10 @@ use std::fs::File;
 use std::io;
 use std::io::{BufRead, BufReader, Write};
 use std::path::Path;
+use std::time::Instant;
 
 static FILE_PATH_EN: &str = "data/words.txt";
-static FILE_PATH_TEST: &str = "data/test.txt";
+//static FILE_PATH_TEST: &str = "data/test.txt";
 
 pub fn start_game() {
     Menu::new().start();
@@ -155,6 +156,7 @@ impl Game {
     }
 
     fn continue_game(&mut self) -> bool {
+        let start_time = Instant::now();
         let default_word = String::from("UNKNOWN");
         let default_esperance = 0;
         let word = self
@@ -164,14 +166,15 @@ impl Game {
                 (&default_word, default_esperance)
             });
 
-        print!("{}  --> {}\n", word.0, word.1);
+        let elapsed_time = start_time.elapsed();
+        print!("{}  --> {}  time {:?}\n", word.0, word.1, elapsed_time);
         let reply = self.input_sequence();
         let word_color = Game::display_colored_text(word.0, &reply);
         let words_len_before = self.words.len();
         self.words = self.eliminate(word.0, reply);
         let words_len_after = self.words.len();
         if words_len_after > 1 {
-            println!("{}  --> {} {:?} {}", word_color, words_len_before - words_len_after, self.words,words_len_after );
+            println!("{}  --> {} {:?} {}", word_color, words_len_before - words_len_after, self.words, words_len_after);
             self.continue_game()
         } else if words_len_after == 1 {
             println!("The word is {}", self.words[0]);
@@ -252,57 +255,54 @@ impl Game {
         let mut max_esperance = 0;
         let mut best_word: &String = &self.words[0];
         let total_words = self.all_words.len();
-
         for (i, _word) in self.all_words.iter().enumerate() {
             let esperance = Self::compute_esperance(self, _word);
             if esperance > max_esperance || (esperance == max_esperance && self.words.contains(_word)) {
                 max_esperance = esperance;
                 best_word = _word;
             }
-
             Self::print_progress(i + 1, total_words, 50);
         }
 
-        println!("\n");
+        print!("\r");
+        for _ in 0..(50 + 10) {
+            print!(" ");
+        }
+        print!("\r");
 
         Some((best_word, max_esperance))
     }
 
 
-
     fn compute_esperance(&self, word: &String) -> i32 {
-        let mut s_restant=0;
+        let mut s_restant = 0;
         let mut esperance = 0;
         let len_words = self.words.len();
         //print!("{} | E=",len_words);
         for _possibles in self.possibilities.iter() {
             //print!("{}",Game::display_colored_text(word,&_possibles.to_vec()));
             let mots_restant = self.eliminate(word, _possibles.to_vec()).len();
-            s_restant+=mots_restant;
-            esperance += mots_restant*(len_words - mots_restant);
+            s_restant += mots_restant;
+            esperance += mots_restant * (len_words - mots_restant);
             //print!("->{} + ",len_words - mots_restant);
         }
         let esperance = esperance / s_restant;
         //println!("\nE({})={} , {}=<{}\n",word,esperance,len_words,s_restant);
         esperance as i32
-
     }
 
     fn eliminate(&self, word: &String, reply: Vec<i8>) -> Vec<String> {
         let word_separate = Game::separate_strings(word, &reply);
 
-        let mut words_reply = self.words.clone();
-        //println!("{}",Game::display_colored_text(word,&reply));
-
-        words_reply = words_reply.into_iter()
+        self.words.iter()
             .filter(|word|
                 word_separate.2.iter()
                     .all(|(c, i)| word.chars().nth(*i) == Some(*c))
             )
             .filter(|word| {
-                let word_chars: Vec<(char, usize)> = word.chars().enumerate().map(|(i, c)| (c, i)).collect();
+                let word_chars: Vec<(usize, char)> = word.chars().enumerate().collect();
                 word_separate.1.iter()
-                    .all(|(c, i)| !word_chars.contains(&(*c, *i))) && word_separate.1.iter().all(|(c, _)| word.contains(*c))
+                    .all(|(c, i)| !word_chars.contains(&(*i, *c))) && word_separate.1.iter().all(|(c, _)| word.contains(*c))
             })
             .filter(|word| {
                 word_separate.0.iter().all(|c| {
@@ -317,9 +317,10 @@ impl Game {
                     }
                 })
             })
-            .collect();
-        words_reply
+            .cloned()
+            .collect::<Vec<String>>()
     }
+
 
     fn separate_strings(s: &String, v: &Vec<i8>) -> (Vec<char>, Vec<(char, usize)>, Vec<(char, usize)>) {
         let mut l0 = vec![];
@@ -350,6 +351,5 @@ impl Game {
         print!("] {:.2}%", progress * 100.0);
         io::stdout().flush().unwrap();
     }
-
 }
 
