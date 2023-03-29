@@ -76,7 +76,6 @@ impl Menu {
         }
     }
 
-
     fn choose_word_length() -> i16 {
         println!("Please enter the desired word length for the game (between 2 and 20):");
 
@@ -185,17 +184,16 @@ impl Game {
         }
     }
 
-
     fn start_first(&mut self) {
-        let first_word = "TYRES".to_string();//self.words.choose(&mut rand::thread_rng()).unwrap();
+        let first_word = "TARES".to_string();//self.words.choose(&mut rand::thread_rng()).unwrap();
         println!("Enter a sequence of {} numbers (only 0, 1, or 2): ", self.size);
-        println!("{}  --> first random proposition", first_word);
+        println!("{}  --> 4175", first_word);
 
         let first_reply = self.input_sequence();
         let word_color = Game::display_colored_text(&first_word, &first_reply);
         let words_len_before = self.words.len();
         self.words = self.eliminate(&first_word, first_reply);
-        println!("{}  --> {} words eliminate", word_color, words_len_before - self.words.len());
+        println!("{}  --> {} words eliminate ", word_color, words_len_before - self.words.len());
     }
 
     fn input_sequence(&self) -> Vec<i8> {
@@ -273,7 +271,6 @@ impl Game {
         Some((best_word, max_esperance))
     }
 
-
     fn compute_esperance(&self, word: &String) -> i32 {
         let mut s_restant = 0;
         let mut esperance = 0;
@@ -321,7 +318,6 @@ impl Game {
             .collect::<Vec<String>>()
     }
 
-
     fn separate_strings(s: &String, v: &Vec<i8>) -> (Vec<char>, Vec<(char, usize)>, Vec<(char, usize)>) {
         let mut l0 = vec![];
         let mut l1 = vec![];
@@ -352,4 +348,3 @@ impl Game {
         io::stdout().flush().unwrap();
     }
 }
-
