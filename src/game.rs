@@ -4,6 +4,7 @@ use std::io::{BufRead, BufReader};
 use std::path::Path;
 
 static FILE_PATH_EN: &str = "data/words.txt";
+static FILE_PATH_TEST: &str = "data/test.txt";
 
 pub fn start_game() {
     Menu::new().start();
@@ -170,7 +171,7 @@ impl Game {
         self.words = self.eliminate(word.0, reply);
         let words_len_after = self.words.len();
         if words_len_after > 1 {
-            println!("{}  --> {} {:?}", word_color, words_len_before - words_len_after, self.words);
+            println!("{}  --> {} {:?} {}", word_color, words_len_before - words_len_after, self.words,words_len_after );
             self.continue_game()
         } else if words_len_after == 1 {
             println!("The word is {}", self.words[0]);
@@ -264,15 +265,21 @@ impl Game {
     }
 
     fn compute_esperance(&self, word: &String) -> i32 {
+        let mut s_restant=0;
         let mut esperance = 0;
         let len_words = self.words.len();
+        //print!("{} | E=",len_words);
         for _possibles in self.possibilities.iter() {
+            //print!("{}",Game::display_colored_text(word,&_possibles.to_vec()));
             let mots_restant = self.eliminate(word, _possibles.to_vec()).len();
-            esperance += mots_restant * (len_words - mots_restant);
-            //print!("    {:?},{}\n",_possiblities,esperance);
+            s_restant+=mots_restant;
+            esperance += mots_restant*(len_words - mots_restant);
+            //print!("->{} + ",len_words - mots_restant);
         }
-        esperance = esperance / len_words;
+        let esperance = esperance / s_restant;
+        //println!("\nE({})={} , {}=<{}\n",word,esperance,len_words,s_restant);
         esperance as i32
+
     }
 
     fn eliminate(&self, word: &String, reply: Vec<i8>) -> Vec<String> {
@@ -280,7 +287,6 @@ impl Game {
 
         let mut words_reply = self.words.clone();
         //println!("{}",Game::display_colored_text(word,&reply));
-
 
         words_reply = words_reply.into_iter()
             .filter(|word|
