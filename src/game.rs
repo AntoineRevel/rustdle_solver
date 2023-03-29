@@ -1,6 +1,6 @@
 use std::fs::File;
 use std::io;
-use std::io::{BufRead, BufReader};
+use std::io::{BufRead, BufReader, Write};
 use std::path::Path;
 
 static FILE_PATH_EN: &str = "data/words.txt";
@@ -251,18 +251,24 @@ impl Game {
         }
         let mut max_esperance = 0;
         let mut best_word: &String = &self.words[0];
-        for _word in self.all_words.iter() {
-            let mut esperance = Self::compute_esperance(self, _word);
-            if self.words.contains(_word) {
-                esperance += 1 as i32;
-            }
-            if esperance > max_esperance {
+        let total_words = self.all_words.len();
+
+        for (i, _word) in self.all_words.iter().enumerate() {
+            let esperance = Self::compute_esperance(self, _word);
+            if esperance > max_esperance || (esperance == max_esperance && self.words.contains(_word)) {
                 max_esperance = esperance;
                 best_word = _word;
             }
+
+            Self::print_progress(i + 1, total_words, 50);
         }
+
+        println!("\n");
+
         Some((best_word, max_esperance))
     }
+
+
 
     fn compute_esperance(&self, word: &String) -> i32 {
         let mut s_restant=0;
@@ -329,5 +335,21 @@ impl Game {
         }
         (l0, l1, l2)
     }
+
+    fn print_progress(current: usize, total: usize, width: usize) {
+        let progress = (current as f64) / (total as f64);
+        let completed = (progress * (width as f64)).round() as usize;
+        let incomplete = width - completed;
+        print!("\r[");
+        for _ in 0..completed {
+            print!("#");
+        }
+        for _ in 0..incomplete {
+            print!("-");
+        }
+        print!("] {:.2}%", progress * 100.0);
+        io::stdout().flush().unwrap();
+    }
+
 }
 
