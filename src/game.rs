@@ -3,6 +3,8 @@ use std::io;
 use std::io::{BufRead, BufReader, Write};
 use std::path::Path;
 use std::time::Instant;
+use std::collections::HashMap;
+use rand::prelude::SliceRandom;
 
 static FILE_PATH_EN: &str = "data/words.txt";
 //static FILE_PATH_TEST: &str = "data/test.txt";
@@ -102,6 +104,7 @@ impl Menu {
 
 struct Game {
     size: i16,
+    language : String,
     possibilities: Vec<Vec<i8>>,
     all_words: Vec<String>,
     words: Vec<String>,
@@ -113,7 +116,7 @@ impl Game {
         let possibilities = Game::generate_possibilities(size as usize);
         let all_words = words.clone();
 
-        Game { size, possibilities, all_words, words }
+        Game { size, language, possibilities, all_words, words }
     }
 
     fn generate_possibilities(n: usize) -> Vec<Vec<i8>> {
@@ -185,16 +188,46 @@ impl Game {
     }
 
     fn start_first(&mut self) {
-        let first_word = "TARES".to_string();//self.words.choose(&mut rand::thread_rng()).unwrap();
+        let first_word = self.ouverture();
         println!("Enter a sequence of {} numbers (only 0, 1, or 2): ", self.size);
-        println!("{}  --> 4175", first_word);
+        println!("{}  --> {}", first_word.0,first_word.1);
 
         let first_reply = self.input_sequence();
-        let word_color = Game::display_colored_text(&first_word, &first_reply);
+        let word_color = Game::display_colored_text(&first_word.0, &first_reply);
         let words_len_before = self.words.len();
-        self.words = self.eliminate(&first_word, first_reply);
+        self.words = self.eliminate(&first_word.0, first_reply);
         println!("{}  --> {} words eliminate ", word_color, words_len_before - self.words.len());
     }
+
+    fn ouverture(&self) -> (String, String) {
+        let mut best_ouverture = HashMap::<usize, (String, String)>::new();
+
+        if self.language == "en" {
+            best_ouverture.insert(2, ("HO".to_string(), "with an expected value of 27.5".to_string()));
+            best_ouverture.insert(3, ("EAT".to_string(), "with an expected value of 462.3".to_string()));
+            best_ouverture.insert(4, ("SALE".to_string(), "with an expected value of 2146.6".to_string()));
+            best_ouverture.insert(5, ("TARES".to_string(), "with an expected value of 4175.6".to_string()));
+            best_ouverture.insert(6, ("SAILER".to_string(), "with an expected value of 6877.7".to_string()));
+            best_ouverture.insert(7, ("SALTIER".to_string(), "with an expected value of 9173.5".to_string()));
+            best_ouverture.insert(8, ("NOTARIES".to_string(), "with an expected value of 9380.1".to_string()));
+        }
+
+        if self.language == "fr" {
+            best_ouverture.insert(2, ("eu".to_string(), "with an expected value of 46.691".to_string()));
+            best_ouverture.insert(3, ("aie".to_string(), "with an expected value of 361.133".to_string()));
+            best_ouverture.insert(4, ("raie".to_string(), "with an expected value of 1 707.937".to_string()));
+            best_ouverture.insert(5, ("raies".to_string(), "with an expected value of 5 784.177".to_string()));
+            best_ouverture.insert(6, ("taries".to_string(), "with an expected value of 13 801.754".to_string()));
+            best_ouverture.insert(7, ("ratines".to_string(), "with an expected value of 25 368.590".to_string()));
+            best_ouverture.insert(8, ("rancites".to_string(), "with an expected value of 38 023.956".to_string()));
+        }
+
+        match best_ouverture.get(&(self.size as usize)) {
+            Some((word, info)) => (word.clone(), info.clone()),
+            None => (self.words.choose(&mut rand::thread_rng()).unwrap().to_string(), "".to_string()),
+        }
+    }
+
 
     fn input_sequence(&self) -> Vec<i8> {
         let mut result = vec![];
