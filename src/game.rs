@@ -5,6 +5,8 @@ use std::path::Path;
 use std::time::Instant;
 use std::collections::HashMap;
 use rand::prelude::SliceRandom;
+use rayon::prelude::*;
+use std::sync::{Arc, Mutex};
 
 static FILE_PATH_EN: &str = "data/words.txt";
 //static FILE_PATH_TEST: &str = "data/test.txt";
@@ -283,26 +285,20 @@ impl Game {
         if self.words.is_empty() {
             return None;
         }
-        let mut max_esperance = 0;
-        let mut best_word: &String = &self.words[0];
+
+        let esperances: Arc<Mutex<Vec<(i32, &String)>>> = Arc::new(Mutex::new(Vec::new()));
         let total_words = self.all_words.len();
-        for (i, _word) in self.all_words.iter().enumerate() {
-            let esperance = Self::compute_esperance(self, _word);
-            if esperance > max_esperance || (esperance == max_esperance && self.words.contains(_word)) {
-                max_esperance = esperance;
-                best_word = _word;
-            }
-            Self::print_progress(i + 1, total_words, 50);
-        }
+        self.all_words.par_iter().enumerate().for_each(|(i, word)| {
+            let esperance = Self::compute_esperance(self, word);
+            let mut esperances = esperances.lock().unwrap();
+            esperances.push((esperance, word));
+        });
 
-        print!("\r");
-        for _ in 0..(50 + 10) {
-            print!(" ");
-        }
-        print!("\r");
-
-        Some((best_word, max_esperance))
+        let cloned_esperances = esperances.lock().unwrap().clone();
+        let best_tuple = cloned_esperances.into_iter().max_by_key(|(esperance, _)| *esperance);
+        best_tuple.map(|(esperance, word)| (word, esperance))
     }
+
 
     fn compute_esperance(&self, word: &String) -> i32 {
         let mut s_restant = 0;
