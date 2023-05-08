@@ -287,18 +287,22 @@ impl Game {
         }
 
         let esperances: Arc<Mutex<Vec<(i32, &String)>>> = Arc::new(Mutex::new(Vec::new()));
-        let total_words = self.all_words.len();
-        self.all_words.par_iter().enumerate().for_each(|(i, word)| {
+        self.all_words.par_iter().enumerate().for_each(|(_i, word)| {
             let esperance = Self::compute_esperance(self, word);
             let mut esperances = esperances.lock().unwrap();
             esperances.push((esperance, word));
         });
 
         let cloned_esperances = esperances.lock().unwrap().clone();
-        let best_tuple = cloned_esperances.into_iter().max_by_key(|(esperance, _)| *esperance);
+        let best_tuple = cloned_esperances
+            .iter()
+            .max_by_key(|(esperance, word)| {
+                (*esperance, if self.words.contains(word) { 1 } else { 0 })
+            })
+            .map(|(esperance, word)| (*esperance, *word));
+
         best_tuple.map(|(esperance, word)| (word, esperance))
     }
-
 
     fn compute_esperance(&self, word: &String) -> i32 {
         let mut s_restant = 0;
