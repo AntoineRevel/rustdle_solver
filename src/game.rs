@@ -287,11 +287,22 @@ impl Game {
         }
 
         let esperances: Arc<Mutex<Vec<(i32, &String)>>> = Arc::new(Mutex::new(Vec::new()));
+        let progress: Arc<Mutex<usize>> = Arc::new(Mutex::new(0));
+        let total_words = self.all_words.len();
         self.all_words.par_iter().enumerate().for_each(|(_i, word)| {
             let esperance = Self::compute_esperance(self, word);
             let mut esperances = esperances.lock().unwrap();
             esperances.push((esperance, word));
+            let mut progress = progress.lock().unwrap();
+            *progress += 1;
+            Self::print_progress(*progress, total_words, 50);
         });
+
+        print!("\r");
+        for _ in 0..(50 + 10) {
+            print!(" ");
+        }
+        print!("\r");
 
         let cloned_esperances = esperances.lock().unwrap().clone();
         let best_tuple = cloned_esperances
