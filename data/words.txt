@@ -24698,6 +24698,7 @@ hummingbirds
 hummock
 hummocks
 hummocky
+humor
 humorist
 humorous
 humorously
@@ -30256,7 +30257,6 @@ lute
 lutes
 luther
 lux
-luxor
 luxuriance
 luxuriant
 luxuriantly
