@@ -1,1 +1,7 @@
 /target
+.DS_Store
+.idea/wordle_solver.iml
+.idea/vcs.xml
+.idea/modules.xml
+.idea/.gitignore
+.fleet/run.json

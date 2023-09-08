@@ -9,6 +9,3 @@ pub async fn index() -> impl Responder {
     let result = process_data();
     HttpResponse::Ok().body(result)
 }
-
-
-}
